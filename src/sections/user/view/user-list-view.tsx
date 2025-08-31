@@ -1,6 +1,7 @@
-import type { IUserItem, IUserTableFilters } from 'src/types/user';
+import type { IUserList, IUserTableFilters } from 'src/types/user';
 
-import { useState, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
@@ -19,9 +20,10 @@ import { RouterLink } from 'src/routes/components';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSetState } from 'src/hooks/use-set-state';
 
+import { getallUsers } from 'src/apis';
 import { varAlpha } from 'src/theme/styles';
+import { _roles, USER_STATUS_OPTIONS } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { _roles, _userList, USER_STATUS_OPTIONS } from 'src/_mock';
 
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
@@ -51,11 +53,11 @@ const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
 
 const TABLE_HEAD = [
   { id: 'name', label: 'Name' },
-  { id: 'phoneNumber', label: 'Phone number', width: 180 },
-  // { id: 'company', label: 'Company', width: 220 },
-  { id: 'role', label: 'Role', width: 180 },
-  { id: 'status', label: 'Status', width: 100 },
-  { id: '', width: 88 },
+  { id: 'phoneNumber', label: 'Phone number', width: 150 },
+  { id: 'university', label: 'University', width: 150 },
+  { id: 'city', label: 'City', width: 150 },
+  { id: 'role', label: 'Role', width: 150 },
+  { id: 'status', label: 'Status', width: 150 },
 ];
 
 // ----------------------------------------------------------------------
@@ -67,7 +69,7 @@ export function UserListView() {
 
   const confirm = useBoolean();
 
-  const [tableData, setTableData] = useState<IUserItem[]>(_userList);
+  const [tableData, setTableData] = useState<IUserList[]>([]);
 
   const filters = useSetState<IUserTableFilters>({ name: '', role: [], status: 'all' });
 
@@ -125,16 +127,39 @@ export function UserListView() {
     [filters, table]
   );
 
+  const { data: listOfUsers } = useQuery({
+    queryKey: ['get-all-users'],
+    queryFn: () => getallUsers(),
+    select: (data) => {
+      const transformProfile = data?.map((ele, index) => ({
+        id: ele?.user_id,
+        city: ele?.governorate,
+        role: ele.guard[0].toUpperCase() + ele.guard.slice(1),
+        email: ele?.email,
+        name: `${ele?.first_name} ${ele?.last_name}`,
+        university: ele?.university,
+        avatarUrl: ele?.profile_picture_url,
+        phoneNumber: ele?.mobile_number,
+        status: ele?.account,
+      }));
+
+      return transformProfile;
+    },
+  });
+
+  useEffect(() => {
+    if (listOfUsers) {
+      // @ts-ignore
+      setTableData(listOfUsers);
+    }
+  }, [listOfUsers]);
+
   return (
     <>
       <DashboardContent>
         <CustomBreadcrumbs
           heading="User"
-          links={[
-            { name: 'Dashboard', href: paths.dashboard.root },
-            // { name: 'User', href: paths.dashboard.user.root },
-            { name: 'List' },
-          ]}
+          links={[{ name: 'Dashboard', href: paths.dashboard.root }, { name: 'List' }]}
           action={
             <Button
               component={RouterLink}
@@ -172,12 +197,11 @@ export function UserListView() {
                     }
                     color={
                       (tab.value === 'active' && 'success') ||
-                      (tab.value === 'pending' && 'warning') ||
                       (tab.value === 'banned' && 'error') ||
                       'default'
                     }
                   >
-                    {['active', 'pending', 'banned', 'rejected'].includes(tab.value)
+                    {['active', 'banned'].includes(tab.value)
                       ? tableData.filter((user) => user.status === tab.value).length
                       : tableData.length}
                   </Label>
@@ -307,7 +331,7 @@ export function UserListView() {
 // ----------------------------------------------------------------------
 
 type ApplyFilterProps = {
-  inputData: IUserItem[];
+  inputData: IUserList[];
   filters: IUserTableFilters;
   comparator: (a: any, b: any) => number;
 };

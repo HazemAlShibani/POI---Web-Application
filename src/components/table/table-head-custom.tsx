@@ -46,22 +46,6 @@ export function TableHeadCustom({
   return (
     <TableHead sx={sx}>
       <TableRow>
-        {/* {onSelectAllRows && (
-          <TableCell padding="checkbox">
-            <Checkbox
-              indeterminate={!!numSelected && numSelected < rowCount}
-              checked={!!rowCount && numSelected === rowCount}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                onSelectAllRows(event.target.checked)
-              }
-              inputProps={{
-                name: 'select-all-rows',
-                'aria-label': 'select all rows',
-              }}
-            />
-          </TableCell>
-        )} */}
-
         {headLabel.map((headCell) => (
           <TableCell
             key={headCell.id}

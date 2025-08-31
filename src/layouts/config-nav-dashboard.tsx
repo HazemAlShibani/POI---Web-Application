@@ -59,11 +59,6 @@ export const navData = [
         title: 'Blog',
         path: paths.dashboard.blog.root,
         icon: ICONS.blog,
-        children: [
-          { title: 'List', path: paths.dashboard.blog.root },
-          { title: 'Create', path: paths.dashboard.blog.new },
-          { title: 'Edit', path: paths.dashboard.blog.demo.edit },
-        ],
       },
     ],
   },

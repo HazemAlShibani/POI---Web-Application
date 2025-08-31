@@ -1,4 +1,4 @@
-import type { IUserItem } from 'src/types/user';
+import type { CurentUser } from 'src/pages/dashboard/user/edit';
 
 import { paths } from 'src/routes/paths';
 
@@ -6,28 +6,28 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { UserNewEditForm } from '../user-new-edit-form';
+import { UserEditForm } from '../user-edit-form';
 
 // ----------------------------------------------------------------------
 
 type Props = {
-  user?: IUserItem;
+  user?: CurentUser;
 };
 
 export function UserEditView({ user: currentUser }: Props) {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Edit"
+        heading="View"
         links={[
           // { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'User', href: paths.dashboard.user.list },
+          { name: 'Users', href: paths.dashboard.user.list },
           { name: currentUser?.name },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <UserNewEditForm currentUser={currentUser} />
+      <UserEditForm currentUser={currentUser} />
     </DashboardContent>
   );
 }

@@ -16,6 +16,7 @@ const OverviewAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics')
 // Product
 const ProductDetailsPage = lazy(() => import('src/pages/dashboard/product/details'));
 const ProductListPage = lazy(() => import('src/pages/dashboard/product/list'));
+const ProductCreateMotionPage = lazy(() => import('src/pages/dashboard/product/newMotion'));
 const ProductCreatePage = lazy(() => import('src/pages/dashboard/product/new'));
 const ProductEditPage = lazy(() => import('src/pages/dashboard/product/edit'));
 // User
@@ -62,15 +63,17 @@ export const dashboardRoutes = [
           { path: 'list', element: <ProductListPage /> },
           { path: ':id', element: <ProductDetailsPage /> },
           { path: 'new', element: <ProductCreatePage /> },
+          { path: 'motion', element: <ProductCreateMotionPage /> },
           { path: ':id/edit', element: <ProductEditPage /> },
         ],
       },
+
       {
         path: 'blog',
         children: [
           { element: <BlogPostsPage />, index: true },
           { path: 'list', element: <BlogPostsPage /> },
-          { path: ':title', element: <BlogPostPage /> },
+          { path: ':id', element: <BlogPostPage /> },
           { path: ':title/edit', element: <BlogEditPostPage /> },
           { path: 'new', element: <BlogNewPostPage /> },
         ],

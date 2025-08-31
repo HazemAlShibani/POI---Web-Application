@@ -1,32 +1,65 @@
+import type { AllNotifications } from 'src/apis/type';
+import type { RefetchOptions, QueryObserverResult } from '@tanstack/react-query';
+
+import { toast } from 'sonner';
+import { useMutation } from '@tanstack/react-query';
+
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
-import Typography from '@mui/material/Typography';
+import LoadingButton from '@mui/lab/LoadingButton';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemButton from '@mui/material/ListItemButton';
 
 import { fToNow } from 'src/utils/format-time';
 
-import { CONFIG } from 'src/config-global';
+import { applyToJoin } from 'src/apis';
 
-import { Label } from 'src/components/label';
-import { FileThumbnail } from 'src/components/file-thumbnail';
+import { Iconify } from 'src/components/iconify';
 
-// ----------------------------------------------------------------------
-
-export type NotificationItemProps = {
-  id: string;
-  type: string;
-  title: string;
-  category: string;
-  isUnRead: boolean;
-  avatarUrl: string | null;
-  createdAt: string | number | null;
+export type ApplyUserData = {
+  response: string;
+  application_id: number;
 };
 
-export function NotificationItem({ notification }: { notification: NotificationItemProps }) {
+export function NotificationItem({
+  notification,
+  refetch,
+}: {
+  notification: AllNotifications;
+  refetch: (
+    options?: RefetchOptions | undefined
+  ) => Promise<QueryObserverResult<AllNotifications[], Error>>;
+}) {
+  console.log(notification);
+
+  const { mutate: registerUser, isPending } = useMutation({
+    mutationKey: ['application-user'],
+    mutationFn: async (data: ApplyUserData) => applyToJoin(data),
+    onSuccess: () => {
+      toast.success('Update success!');
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`Update failed! ${error}`);
+    },
+  });
+
+  const acceptNotification = () => {
+    registerUser({
+      application_id: notification.id,
+      response: 'approved',
+    });
+  };
+
+  const rejectNotification = () => {
+    registerUser({
+      application_id: notification.id,
+      response: 'rejected',
+    });
+  };
+
   const renderAvatar = (
     <ListItemAvatar>
       {notification.avatarUrl ? (
@@ -37,11 +70,7 @@ export function NotificationItem({ notification }: { notification: NotificationI
           justifyContent="center"
           sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: 'background.neutral' }}
         >
-          <Box
-            component="img"
-            src={`${CONFIG.site.basePath}/assets/icons/notification/${(notification.type === 'order' && 'ic-order') || (notification.type === 'chat' && 'ic-chat') || (notification.type === 'mail' && 'ic-mail') || (notification.type === 'delivery' && 'ic-delivery')}.svg`}
-            sx={{ width: 24, height: 24 }}
-          />
+          <Iconify icon="material-symbols:person-raised-hand-rounded" />
         </Stack>
       )}
     </ListItemAvatar>
@@ -50,7 +79,7 @@ export function NotificationItem({ notification }: { notification: NotificationI
   const renderText = (
     <ListItemText
       disableTypography
-      primary={reader(notification.title)}
+      primary={notification.title}
       secondary={
         <Stack
           direction="row"
@@ -75,125 +104,24 @@ export function NotificationItem({ notification }: { notification: NotificationI
     />
   );
 
-  const renderUnReadBadge = notification.isUnRead && (
-    <Box
-      sx={{
-        top: 26,
-        width: 8,
-        height: 8,
-        right: 20,
-        borderRadius: '50%',
-        bgcolor: 'info.main',
-        position: 'absolute',
-      }}
-    />
-  );
-
   const friendAction = (
     <Stack spacing={1} direction="row" sx={{ mt: 1.5 }}>
-      <Button size="small" variant="contained">
-        Accept
-      </Button>
-      <Button size="small" variant="outlined">
-        Decline
-      </Button>
-    </Stack>
-  );
-
-  const projectAction = (
-    <Stack alignItems="flex-start">
-      <Box
-        sx={{
-          p: 1.5,
-          my: 1.5,
-          borderRadius: 1.5,
-          color: 'text.secondary',
-          bgcolor: 'background.neutral',
-        }}
+      <LoadingButton
+        onClick={acceptNotification}
+        size="small"
+        variant="contained"
+        loading={isPending}
       >
-        {reader(
-          `<p><strong>@Jaydon Frankie</strong> feedback by asking questions or just leave a note of appreciation.</p>`
-        )}
-      </Box>
-
-      <Button size="small" variant="contained">
-        Reply
-      </Button>
-    </Stack>
-  );
-
-  const fileAction = (
-    <Stack
-      spacing={1}
-      direction="row"
-      sx={{
-        pl: 1,
-        p: 1.5,
-        mt: 1.5,
-        borderRadius: 1.5,
-        bgcolor: 'background.neutral',
-      }}
-    >
-      <FileThumbnail file="http://localhost:8080/httpsdesign-suriname-2015.mp3" />
-
-      <Stack spacing={1} direction={{ xs: 'column', sm: 'row' }} flexGrow={1} sx={{ minWidth: 0 }}>
-        <ListItemText
-          disableTypography
-          primary={
-            <Typography variant="subtitle2" component="div" sx={{ color: 'text.secondary' }} noWrap>
-              design-suriname-2015.mp3
-            </Typography>
-          }
-          secondary={
-            <Stack
-              direction="row"
-              alignItems="center"
-              sx={{ typography: 'caption', color: 'text.disabled' }}
-              divider={
-                <Box
-                  sx={{
-                    mx: 0.5,
-                    width: 2,
-                    height: 2,
-                    borderRadius: '50%',
-                    bgcolor: 'currentColor',
-                  }}
-                />
-              }
-            >
-              <span>2.3 GB</span>
-              <span>30 min ago</span>
-            </Stack>
-          }
-        />
-
-        <Button size="small" variant="outlined">
-          Download
-        </Button>
-      </Stack>
-    </Stack>
-  );
-
-  const tagsAction = (
-    <Stack direction="row" spacing={0.75} flexWrap="wrap" sx={{ mt: 1.5 }}>
-      <Label variant="outlined" color="info">
-        Design
-      </Label>
-      <Label variant="outlined" color="warning">
-        Dashboard
-      </Label>
-      <Label variant="outlined">Design system</Label>
-    </Stack>
-  );
-
-  const paymentAction = (
-    <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-      <Button size="small" variant="contained">
-        Pay
-      </Button>
-      <Button size="small" variant="outlined">
+        Accept
+      </LoadingButton>
+      <LoadingButton
+        onClick={rejectNotification}
+        size="small"
+        variant="outlined"
+        loading={isPending}
+      >
         Decline
-      </Button>
+      </LoadingButton>
     </Stack>
   );
 
@@ -202,38 +130,16 @@ export function NotificationItem({ notification }: { notification: NotificationI
       disableRipple
       sx={{
         p: 2.5,
-        alignItems: 'flex-start',
+        alignItems: 'flex-center',
         borderBottom: (theme) => `dashed 1px ${theme.vars.palette.divider}`,
       }}
     >
-      {renderUnReadBadge}
-
       {renderAvatar}
 
       <Stack sx={{ flexGrow: 1 }}>
         {renderText}
         {notification.type === 'friend' && friendAction}
-        {notification.type === 'project' && projectAction}
-        {notification.type === 'file' && fileAction}
-        {notification.type === 'tags' && tagsAction}
-        {notification.type === 'payment' && paymentAction}
       </Stack>
     </ListItemButton>
-  );
-}
-
-// ----------------------------------------------------------------------
-
-function reader(data: string) {
-  return (
-    <Box
-      dangerouslySetInnerHTML={{ __html: data }}
-      sx={{
-        mb: 0.5,
-        '& p': { typography: 'body2', m: 0 },
-        '& a': { color: 'inherit', textDecoration: 'none' },
-        '& strong': { typography: 'subtitle2' },
-      }}
-    />
   );
 }

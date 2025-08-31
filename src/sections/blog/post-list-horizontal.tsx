@@ -1,4 +1,5 @@
-import type { IPostItem } from 'src/types/blog';
+import type { AllPosts } from 'src/apis/type';
+import type { RefetchOptions, QueryObserverResult } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Pagination, { paginationClasses } from '@mui/material/Pagination';
@@ -9,14 +10,19 @@ import { PostItemHorizontal } from './post-item-horizontal';
 // ----------------------------------------------------------------------
 
 type Props = {
-  posts: IPostItem[];
+  posts: AllPosts[] | undefined;
   loading?: boolean;
+  refetch: (
+    options?: RefetchOptions | undefined
+  ) => Promise<QueryObserverResult<AllPosts[], Error>>;
 };
 
-export function PostListHorizontal({ posts, loading }: Props) {
+export function PostListHorizontal({ posts, loading, refetch }: Props) {
   const renderLoading = <PostItemSkeleton variant="horizontal" />;
 
-  const renderList = posts.map((post) => <PostItemHorizontal key={post.id} post={post} />);
+  const renderList = posts?.map((post) => (
+    <PostItemHorizontal refetch={refetch} key={post.id} post={post} />
+  ));
 
   return (
     <>
@@ -28,7 +34,7 @@ export function PostListHorizontal({ posts, loading }: Props) {
         {loading ? renderLoading : renderList}
       </Box>
 
-      {posts.length > 8 && (
+      {posts && posts.length > 8 && (
         <Pagination
           count={8}
           sx={{

@@ -2,8 +2,6 @@ import { useMemo, useEffect, useCallback } from 'react';
 
 import { useSetState } from 'src/hooks/use-set-state';
 
-import axios, { endpoints } from 'src/utils/axios';
-
 import { STORAGE_KEY } from './constant';
 import { AuthContext } from '../auth-context';
 import { setSession, isValidToken } from './utils';
@@ -35,9 +33,13 @@ export function AuthProvider({ children }: Props) {
       if (accessToken && isValidToken(accessToken)) {
         setSession(accessToken);
 
-        const res = await axios.get(endpoints.auth.me);
+        // const res = await axios.get(endpoints.auth.me);
 
-        const { user } = res.data;
+        // const user = res.data.data[0];
+        const user = {
+          email: 'hhhhhhhhhh',
+          name: 'Hazem',
+        };
 
         setState({ user: { ...user, accessToken }, loading: false });
       } else {

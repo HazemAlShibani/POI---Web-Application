@@ -1,55 +1,94 @@
 import type { IUserItem } from 'src/types/user';
+import type { RegisterUserData } from 'src/apis/type';
 
 import { z as zod } from 'zod';
 import { useMemo } from 'react';
+import { useForm } from 'react-hook-form';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, Controller } from 'react-hook-form';
 import { isValidPhoneNumber } from 'react-phone-number-input/input';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import Switch from '@mui/material/Switch';
+import { InputAdornment } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
-import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { fData } from 'src/utils/format-number';
 
-import { Label } from 'src/components/label';
+import { CustomError } from 'src/apis/type';
+import { uploadFile, registerUserHandler } from 'src/apis';
+
 import { toast } from 'src/components/snackbar';
+import { Iconify } from 'src/components/iconify';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
 export type NewUserSchemaType = zod.infer<typeof NewUserSchema>;
 
-export const NewUserSchema = zod.object({
-  avatarUrl: schemaHelper.file({ message: { required_error: 'Avatar is required!' } }),
-  name: zod.string().min(1, { message: 'Name is required!' }),
-  email: zod
-    .string()
-    .min(1, { message: 'Email is required!' })
-    .email({ message: 'Email must be a valid email address!' }),
-  phoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }),
-  country: schemaHelper.objectOrNull<string | null>({
-    message: { required_error: 'Country is required!' },
-  }),
-  address: zod.string().min(1, { message: 'Address is required!' }),
-  company: zod.string().min(1, { message: 'Company is required!' }),
-  state: zod.string().min(1, { message: 'State is required!' }),
-  city: zod.string().min(1, { message: 'City is required!' }),
-  role: zod.string().min(1, { message: 'Role is required!' }),
-  zipCode: zod.string().min(1, { message: 'Zip code is required!' }),
-  // Not required
-  status: zod.string(),
-  isVerified: zod.boolean(),
-});
+export const NewUserSchema = zod
+  .object({
+    avatarUrl: schemaHelper.file({ message: { required_error: 'Image is required!' } }),
+
+    profile_picture_url: zod.string().min(1, { message: 'File is required!' }),
+    pp_public_id: zod.string().min(1, { message: 'File is required!' }),
+
+    first_name: zod.string().min(1, { message: 'First name is required!' }),
+    last_name: zod.string().min(1, { message: 'Last name is required!' }),
+    email: zod
+      .string()
+      .min(1, { message: 'Email is required!' })
+      .email({ message: 'Email must be a valid email address!' }),
+    password: zod
+      .string()
+      .min(1, { message: 'Password is required!' })
+      .min(8, { message: 'Password must be at least 8 characters!' }),
+    confirmPassword: zod.string().min(6, 'Password confirmation is required'),
+
+    mobile_number: schemaHelper.phoneNumber({ isValidPhoneNumber }),
+    birth_date: zod.string().min(1, { message: 'Birth Date is required!' }),
+
+    faculty_id: zod.object({
+      code: zod.string(),
+      label: zod.string(),
+    }),
+    coach_id: zod.object({
+      code: zod.string(),
+      label: zod.string(),
+    }),
+    governorate: zod.string().min(1, { message: 'Governorate is required!' }),
+    education_degree: zod.string().min(1, { message: 'Education degree is required!' }),
+
+    role: zod.string().min(1, { message: 'Role is required!' }),
+  })
+  .refine(
+    (data) =>
+      data.role !== 'Debater' ||
+      (data.coach_id.code.trim() !== '' && data.coach_id.label.trim() !== ''),
+    {
+      message: 'Coach is required!',
+      path: ['coach_id'],
+    }
+  )
+  .refine((data) => data.faculty_id.code.trim() !== '' && data.faculty_id.label.trim() !== '', {
+    message: 'Faculty is required!',
+    path: ['faculty_id'],
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords must match',
+    path: ['confirmPassword'],
+  });
 
 // ----------------------------------------------------------------------
 
@@ -60,20 +99,30 @@ type Props = {
 export function UserNewEditForm({ currentUser }: Props) {
   const router = useRouter();
 
+  const password = useBoolean();
+
   const defaultValues = useMemo(
     () => ({
-      status: currentUser?.status || '',
       avatarUrl: currentUser?.avatarUrl || null,
-      isVerified: currentUser?.isVerified || true,
-      name: currentUser?.name || '',
+      first_name: currentUser?.first_name || '',
+      last_name: currentUser?.last_name || '',
       email: currentUser?.email || '',
-      phoneNumber: currentUser?.phoneNumber || '',
-      country: currentUser?.country || '',
-      state: currentUser?.state || '',
-      city: currentUser?.city || '',
-      address: currentUser?.address || '',
-      zipCode: currentUser?.zipCode || '',
-      company: currentUser?.company || '',
+      profile_picture_url: '',
+      pp_public_id: '',
+      password: '',
+      confirmPassword: '',
+      faculty_id: {
+        code: '',
+        label: '',
+      },
+      coach_id: {
+        code: '',
+        label: '',
+      },
+      mobile_number: currentUser?.mobile_number || '',
+      birth_date: currentUser?.birth_date || '',
+      governorate: currentUser?.governorate || '',
+      education_degree: currentUser?.education_degree || '',
       role: currentUser?.role || '',
     }),
     [currentUser]
@@ -85,50 +134,83 @@ export function UserNewEditForm({ currentUser }: Props) {
     defaultValues,
   });
 
-  const {
-    reset,
-    watch,
-    control,
-    handleSubmit,
-    formState: { isSubmitting },
-  } = methods;
+  const { reset, watch, handleSubmit } = methods;
 
-  const values = watch();
+  const { mutate: uploadFile1Mutate } = useMutation({
+    mutationKey: ['upload-file1-offer'],
+    mutationFn: async (args: File) => uploadFile(args),
+    onSuccess: (data) => {
+      // @ts-ignore
+      methods.setValue('avatarUrl', data.data.url);
+      // @ts-ignore
+      methods.setValue('profile_picture_url', data.data.url);
+      // @ts-ignore
+      methods.setValue('pp_public_id', data.data.public_id);
+      // @ts-ignore
+      methods.clearErrors('avatarUrl');
+    },
+    onError: (error) => {
+      if (error instanceof CustomError) {
+        methods.setError('avatarUrl', error);
+      }
+    },
+  });
 
-  const onSubmit = handleSubmit(async (data) => {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+  const { mutate: registerUser, isPending: isPendingRegisterUser } = useMutation({
+    mutationKey: ['register-user'],
+    mutationFn: async (data: RegisterUserData) => registerUserHandler(data),
+    onSuccess: () => {
       reset();
       toast.success(currentUser ? 'Update success!' : 'Create success!');
       router.push(paths.dashboard.user.list);
-      console.info('DATA', data);
+    },
+    onError: (errordata) => {
+      toast.error(currentUser ? `Update failed! ${errordata}` : `Create failed! ${errordata}`);
+    },
+  });
+
+  const onSubmit = handleSubmit(async (data) => {
+    try {
+      const FinalData = {
+        role: data.role,
+        data: {
+          profile_picture_url: data.profile_picture_url,
+          public_id: data.pp_public_id,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email,
+          password: data.password,
+          password_confirmation: data.confirmPassword,
+          mobile_number: `0${data.mobile_number.slice(4)}`,
+          birth_date: data.birth_date,
+          faculty_id: Number(data.faculty_id.code),
+          governorate: data.governorate,
+          education_degree: data.education_degree.toLowerCase(),
+          ...(data.role === 'Debater' && { coach_id: Number(data.coach_id.code) }),
+        },
+      };
+
+      registerUser(FinalData);
     } catch (error) {
       console.error(error);
     }
   });
 
+  const uploadImage = (data: File[]) => {
+    uploadFile1Mutate(data[0]);
+    methods.setValue('avatarUrl', data[0]);
+  };
+
   return (
     <Form methods={methods} onSubmit={onSubmit}>
       <Grid container spacing={3}>
-        <Grid xs={12} md={4}>
+        <Grid xs={12} md={currentUser ? 12 : 4}>
           <Card sx={{ pt: 10, pb: 5, px: 3 }}>
-            {currentUser && (
-              <Label
-                color={
-                  (values.status === 'active' && 'success') ||
-                  (values.status === 'banned' && 'error') ||
-                  'warning'
-                }
-                sx={{ position: 'absolute', top: 24, right: 24 }}
-              >
-                {values.status}
-              </Label>
-            )}
-
             <Box sx={{ mb: 5 }}>
               <Field.UploadAvatar
                 name="avatarUrl"
                 maxSize={3145728}
+                onDrop={uploadImage}
                 helperText={
                   <Typography
                     variant="caption"
@@ -148,59 +230,6 @@ export function UserNewEditForm({ currentUser }: Props) {
             </Box>
 
             {currentUser && (
-              <FormControlLabel
-                labelPlacement="start"
-                control={
-                  <Controller
-                    name="status"
-                    control={control}
-                    render={({ field }) => (
-                      <Switch
-                        {...field}
-                        checked={field.value !== 'active'}
-                        onChange={(event) =>
-                          field.onChange(event.target.checked ? 'banned' : 'active')
-                        }
-                      />
-                    )}
-                  />
-                }
-                label={
-                  <>
-                    <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                      Banned
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      Apply disable account
-                    </Typography>
-                  </>
-                }
-                sx={{
-                  mx: 0,
-                  mb: 1,
-                  width: 1,
-                  justifyContent: 'space-between',
-                }}
-              />
-            )}
-
-            {/* <Field.Switch
-              name="isVerified"
-              labelPlacement="start"
-              label={
-                <>
-                  <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                    Email verified
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Disabling this will automatically send the user a verification email
-                  </Typography>
-                </>
-              }
-              sx={{ mx: 0, width: 1, justifyContent: 'space-between' }}
-            /> */}
-
-            {currentUser && (
               <Stack justifyContent="center" alignItems="center" sx={{ mt: 3 }}>
                 <Button variant="soft" color="error">
                   Delete user
@@ -209,41 +238,107 @@ export function UserNewEditForm({ currentUser }: Props) {
             )}
           </Card>
         </Grid>
-
-        <Grid xs={12} md={8}>
-          <Card sx={{ p: 3 }}>
-            <Box
-              rowGap={3}
-              columnGap={2}
-              display="grid"
-              gridTemplateColumns={{ xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' }}
-            >
-              <Field.Text name="name" label="Full name" />
-              <Field.Text name="email" label="Email address" />
-              <Field.Phone name="phoneNumber" label="Phone number" />
-
-              <Field.CountrySelect
+        {!currentUser && (
+          <Grid xs={12} md={8}>
+            <Card sx={{ p: 3 }}>
+              <Field.RoleSelect
+                style={{ marginBottom: '25px' }}
                 fullWidth
-                name="country"
-                label="Country"
-                placeholder="Choose a country"
+                name="role"
+                label="Role"
+                placeholder="Choose a Role"
               />
+              <Box
+                rowGap={3}
+                columnGap={2}
+                display="grid"
+                gridTemplateColumns={{ xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' }}
+              >
+                <Field.Text name="first_name" label="First name" />
+                <Field.Text name="last_name" label="Last name" />
+                <Field.Text name="email" label="Email address" />
+                <Field.Phone name="mobile_number" label="Phone number" />
 
-              <Field.Text name="state" label="State/region" />
-              <Field.Text name="city" label="City" />
-              <Field.Text name="address" label="Address" />
-              <Field.Text name="zipCode" label="Zip/code" />
-              <Field.Text name="company" label="Company" />
-              <Field.Text name="role" label="Role" />
-            </Box>
+                <Field.Text
+                  sx={{ mb: 1 }}
+                  name="password"
+                  placeholder="password"
+                  type={password.value ? 'text' : 'password'}
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={password.onToggle} edge="end">
+                          <Iconify
+                            icon={password.value ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
+                          />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
 
-            <Stack alignItems="flex-end" sx={{ mt: 3 }}>
-              <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-                {!currentUser ? 'Create user' : 'Save changes'}
-              </LoadingButton>
-            </Stack>
-          </Card>
-        </Grid>
+                <Field.Text
+                  name="confirmPassword"
+                  placeholder="confirm password"
+                  type={password.value ? 'text' : 'password'}
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={password.onToggle} edge="end">
+                          <Iconify
+                            icon={password.value ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
+                          />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                <Field.ReagionSelect
+                  fullWidth
+                  name="governorate"
+                  label="Governorate"
+                  placeholder="Choose a Governorate"
+                />
+
+                <Field.DatePicker name="birth_date" label="Birth Date" />
+
+                <Field.EducationSelect
+                  fullWidth
+                  name="education_degree"
+                  label="Education degree"
+                  placeholder="Choose a Education degree"
+                />
+
+                <Field.FacultySelect
+                  fullWidth
+                  name="faculty_id"
+                  label="Faculty"
+                  placeholder="Choose a Faculty"
+                />
+              </Box>
+
+              {watch('role') === 'Debater' && (
+                <Stack alignItems="flex-end" sx={{ mt: 3 }}>
+                  <Field.CoachSelect
+                    fullWidth
+                    name="coach_id"
+                    label="Coach"
+                    placeholder="Choose a Coach"
+                  />
+                </Stack>
+              )}
+
+              <Stack alignItems="flex-end" sx={{ mt: 3 }}>
+                <LoadingButton type="submit" variant="contained" loading={isPendingRegisterUser}>
+                  {!currentUser ? 'Create user' : 'Save changes'}
+                </LoadingButton>
+              </Stack>
+            </Card>
+          </Grid>
+        )}
       </Grid>
     </Form>
   );

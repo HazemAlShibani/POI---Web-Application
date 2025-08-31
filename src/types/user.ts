@@ -76,19 +76,34 @@ export type IUserCard = {
 
 export type IUserItem = {
   id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   city: string;
   role: string;
   email: string;
-  state: string;
+  governorate: string;
+  education_degree: string;
   status: string;
   address: string;
   country: string;
   zipCode: string;
   company: string;
   avatarUrl: string;
-  phoneNumber: string;
+  birth_date: string;
+  mobile_number: string;
   isVerified: boolean;
+};
+
+export type IUserList = {
+  id: string;
+  city: string;
+  role: string;
+  email: string;
+  name: string;
+  university: string;
+  avatarUrl: string;
+  phoneNumber: string;
+  status: string;
 };
 
 export type IUserAccount = {

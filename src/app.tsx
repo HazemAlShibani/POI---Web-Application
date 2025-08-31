@@ -1,6 +1,10 @@
 import 'src/global.css';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import 'react-toastify/dist/ReactToastify.css';
 
 // ----------------------------------------------------------------------
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { Router } from 'src/routes/sections';
 
@@ -22,6 +26,8 @@ import { AuthProvider as AmplifyAuthProvider } from 'src/auth/context/amplify';
 import { AuthProvider as SupabaseAuthProvider } from 'src/auth/context/supabase';
 import { AuthProvider as FirebaseAuthProvider } from 'src/auth/context/firebase';
 
+import { AuthProviderNotification } from './AuthContext';
+
 // ----------------------------------------------------------------------
 
 const AuthProvider =
@@ -33,21 +39,26 @@ const AuthProvider =
 
 export default function App() {
   useScrollToTop();
+  const queryClient = new QueryClient();
 
   return (
     <I18nProvider>
       <LocalizationProvider>
         <AuthProvider>
-          <SettingsProvider settings={defaultSettings}>
-            <ThemeProvider>
-              <MotionLazy>
-                <Snackbar />
-                <ProgressBar />
-                <SettingsDrawer />
-                <Router />
-              </MotionLazy>
-            </ThemeProvider>
-          </SettingsProvider>
+          <QueryClientProvider client={queryClient}>
+            <SettingsProvider settings={defaultSettings}>
+              <ThemeProvider>
+                <MotionLazy>
+                  <Snackbar />
+                  <ProgressBar />
+                  <SettingsDrawer />
+                  <AuthProviderNotification>
+                    <Router />
+                  </AuthProviderNotification>
+                </MotionLazy>
+              </ThemeProvider>
+            </SettingsProvider>
+          </QueryClientProvider>
         </AuthProvider>
       </LocalizationProvider>
     </I18nProvider>

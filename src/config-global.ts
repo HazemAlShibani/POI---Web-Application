@@ -8,6 +8,7 @@ export type ConfigValue = {
   site: {
     name: string;
     serverUrl: string;
+    serverPOI: string;
     assetURL: string;
     basePath: string;
     version: string;
@@ -40,6 +41,9 @@ export const CONFIG: ConfigValue = {
   site: {
     name: 'Minimals',
     serverUrl: import.meta.env.VITE_SERVER_URL ?? '',
+    serverPOI: 'http://31.97.46.191/api',
+    // serverPOI: 'http://192.168.26.59:8002/api',
+    // serverPOI: 'http://192.168.20.24:8002/api',
     assetURL: import.meta.env.VITE_ASSET_URL ?? '',
     basePath: import.meta.env.VITE_BASE_PATH ?? '',
     version: packageJson.version,

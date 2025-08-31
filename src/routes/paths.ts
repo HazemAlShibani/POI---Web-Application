@@ -118,6 +118,7 @@ export const paths = {
     product: {
       root: `${ROOTS.DASHBOARD}/product`,
       new: `${ROOTS.DASHBOARD}/product/new`,
+      motion: `${ROOTS.DASHBOARD}/product/motion`,
       details: (id: string) => `${ROOTS.DASHBOARD}/product/${id}`,
       edit: (id: string) => `${ROOTS.DASHBOARD}/product/${id}/edit`,
       demo: {
@@ -138,7 +139,7 @@ export const paths = {
     blog: {
       root: `${ROOTS.DASHBOARD}/blog`,
       new: `${ROOTS.DASHBOARD}/blog/new`,
-      details: (title: string) => `${ROOTS.DASHBOARD}/blog/${paramCase(title)}`,
+      details: (id: string) => `${ROOTS.DASHBOARD}/blog/${paramCase(id)}`,
       edit: (title: string) => `${ROOTS.DASHBOARD}/blog/${paramCase(title)}/edit`,
       demo: {
         details: `${ROOTS.DASHBOARD}/blog/${paramCase(MOCK_TITLE)}`,

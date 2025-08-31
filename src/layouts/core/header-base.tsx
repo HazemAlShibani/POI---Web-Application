@@ -89,14 +89,8 @@ export function HeaderBase({
   slotsDisplay: {
     signIn = true,
     account = true,
-    helpLink = true,
     settings = true,
-    purchase = true,
-    contacts = true,
-    searchbar = true,
-    workspaces = true,
     menuButton = true,
-    localization = true,
     notifications = true,
   } = {},
   ...other
@@ -129,9 +123,6 @@ export function HeaderBase({
             {/* -- Divider -- */}
             <StyledDivider data-slot="divider" />
 
-            {/* -- Workspace popover -- */}
-            {/* {workspaces && <WorkspacesPopover data-slot="workspaces" data={data?.workspaces} />} */}
-
             {slots?.leftAreaEnd}
           </>
         ),
@@ -147,32 +138,10 @@ export function HeaderBase({
                 gap: { xs: 1, sm: 1.5 },
               }}
             >
-              {/* -- Help link -- */}
-              {/* {helpLink && (
-                <Link
-                  data-slot="help-link"
-                  href={paths.faqs}
-                  component={RouterLink}
-                  color="inherit"
-                  sx={{ typography: 'subtitle2' }}
-                >
-                  Need help?
-                </Link>
-              )} */}
-
-              {/* -- Searchbar -- */}
-              {/* {searchbar && <Searchbar data-slot="searchbar" data={data?.nav} />} */}
-
-              {/* -- Language popover -- */}
-              {/* {localization && <LanguagePopover data-slot="localization" data={data?.langs} />} */}
-
               {/* -- Notifications popover -- */}
               {notifications && (
                 <NotificationsDrawer data-slot="notifications" data={data?.notifications} />
               )}
-
-              {/* -- Contacts popover -- */}
-              {/* {contacts && <ContactsPopover data-slot="contacts" data={data?.contacts} />} */}
 
               {/* -- Settings button -- */}
               {settings && <SettingsButton data-slot="settings" />}
@@ -182,23 +151,6 @@ export function HeaderBase({
 
               {/* -- Sign in button -- */}
               {signIn && <SignInButton />}
-
-              {/* -- Purchase button -- */}
-              {/* {purchase && (
-                <Button
-                  data-slot="purchase"
-                  variant="contained"
-                  rel="noopener"
-                  target="_blank"
-                  href={paths.minimalStore}
-                  sx={{
-                    display: 'none',
-                    [theme.breakpoints.up(layoutQuery)]: { display: 'inline-flex' },
-                  }}
-                >
-                  Purchase
-                </Button>
-              )} */}
             </Box>
 
             {slots?.rightAreaEnd}

@@ -3,7 +3,6 @@ import type { IProductReview } from 'src/types/product';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Rating from '@mui/material/Rating';
-import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
 import LinearProgress from '@mui/material/LinearProgress';
@@ -12,8 +11,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { sumBy } from 'src/utils/helper';
 import { fShortenNumber } from 'src/utils/format-number';
-
-import { Iconify } from 'src/components/iconify';
 
 import { ProductReviewNewForm } from './product-review-new-form';
 
@@ -88,20 +85,6 @@ export function ProductDetailsReview({
             </Typography>
           </Stack>
         ))}
-    </Stack>
-  );
-
-  const renderReviewButton = (
-    <Stack alignItems="center" justifyContent="center">
-      <Button
-        size="large"
-        variant="soft"
-        color="inherit"
-        onClick={review.onTrue}
-        startIcon={<Iconify icon="solar:pen-bold" />}
-      >
-        Write your review
-      </Button>
     </Stack>
   );
 

@@ -249,3 +249,46 @@ export const countries = [
   { code: 'ZM', label: 'Zambia', phone: '260' },
   { code: 'ZW', label: 'Zimbabwe', phone: '263' },
 ];
+
+export const reagions = [
+  { code: 'Damascus', label: 'Damascus', phone: '963' },
+  { code: 'Rif Dimashq', label: 'Rif Dimashq', phone: '963' },
+  { code: 'Aleppo', label: 'Aleppo', phone: '963' },
+  { code: 'Homs', label: 'Homs', phone: '963' },
+  { code: 'Latakia', label: 'Latakia', phone: '963' },
+  { code: 'Tartus', label: 'Tartus', phone: '963' },
+  { code: 'Hama', label: 'Hama', phone: '963' },
+  { code: 'Al-Hasakah', label: 'Al-Hasakah', phone: '963' },
+  { code: 'Raqqa', label: 'Raqqa', phone: '963' },
+  { code: 'Deir ez-Zor', label: 'Deir ez-Zor', phone: '963' },
+  { code: 'As-Suwayda', label: 'As-Suwayda', phone: '963' },
+  { code: 'Daraa', label: 'Daraa', phone: '963' },
+  { code: 'Quneitra', label: 'Quneitra', phone: '963' },
+];
+
+export const educations = [
+  { code: 'bachelor', label: 'Bachelor', phone: '' },
+  { code: 'master', label: 'Master', phone: '' },
+  { code: 'doctoral', label: 'Doctoral', phone: '' },
+];
+
+export const roles = [
+  { code: 'Debater', label: 'Debater', phone: '' },
+  { code: 'Coach', label: 'Coach', phone: '' },
+  { code: 'Judge', label: 'Judge', phone: '' },
+];
+
+export const debateTypes = [
+  { code: 'onsite', label: 'onsite', phone: '' },
+  { code: 'online', label: 'online', phone: '' },
+];
+
+export const motionType = [
+  { code: '1', label: 'Subject', phone: '' },
+  { code: '2', label: 'Form', phone: '' },
+];
+
+export const postType = [
+  { code: 'artice', label: 'Article', phone: '' },
+  { code: 'publish_course', label: 'Publish Course', phone: '' },
+];

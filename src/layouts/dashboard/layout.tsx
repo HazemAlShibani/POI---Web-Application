@@ -2,7 +2,10 @@ import type { SettingsState } from 'src/components/settings';
 import type { NavSectionProps } from 'src/components/nav-section';
 import type { Theme, SxProps, CSSObject, Breakpoint } from '@mui/material/styles';
 
-import { useMemo } from 'react';
+import { toast } from 'sonner';
+import { useMemo, useEffect } from 'react';
+import { onMessage } from 'firebase/messaging';
+import { useMutation } from '@tanstack/react-query';
 
 import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
@@ -10,9 +13,12 @@ import { iconButtonClasses } from '@mui/material/IconButton';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { _contacts } from 'src/_mock';
 import { allLangs } from 'src/locales';
-import { _contacts, _notifications } from 'src/_mock';
+import { sendFCMToken } from 'src/apis';
+import { useAuth } from 'src/AuthContext';
 import { varAlpha, stylesMode } from 'src/theme/styles';
+import { messaging, requestFCMToken } from 'src/firebase/firebaseConfig';
 
 import { bulletColor } from 'src/components/nav-section';
 import { useSettingsContext } from 'src/components/settings';
@@ -39,6 +45,34 @@ export type DashboardLayoutProps = {
 };
 
 export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
+  const { setHasNewApplications } = useAuth();
+
+  const { mutate } = useMutation({
+    mutationKey: ['notification-users'],
+    mutationFn: async (token: string) => sendFCMToken(token),
+    onError: (error) => {
+      toast.error(`Faield to activate the Notifications!`);
+    },
+  });
+
+  onMessage(messaging, (payload) => {
+    console.log(payload);
+    toast.success('You have applications to review!');
+    setHasNewApplications(true);
+  });
+
+  useEffect(() => {
+    const fetchFCMToken = async () => {
+      try {
+        const token = await requestFCMToken();
+        mutate(token);
+      } catch (err) {
+        console.error('Error getting FCM token: ', err);
+      }
+    };
+    fetchFCMToken();
+  }, [mutate]);
+
   const theme = useTheme();
 
   const mobileNavOpen = useBoolean();
@@ -81,7 +115,7 @@ export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
               account: _account,
               contacts: _contacts,
               workspaces: _workspaces,
-              notifications: _notifications,
+              notifications: [],
             }}
             slotsDisplay={{
               signIn: false,
